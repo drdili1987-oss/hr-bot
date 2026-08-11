@@ -16,6 +16,9 @@ from keyboards import (
     BTN_ADMIN_STATS,
     BTN_ADMIN_VIEW_APPS,
     BTN_CANCEL,
+    BTN_APPLY,
+    BTN_ABOUT,
+    BTN_OPEN_CANDIDACY,
     admin_menu_kb,
     cancel_only_kb,
     main_menu_kb,
@@ -295,6 +298,14 @@ async def admin_del_vacancy_confirm(callback: CallbackQuery) -> None:
 # --- Search Handling ---
 @router.message(F.text)
 async def admin_text_search(message: Message, state: FSMContext) -> None:
+    # Ignore commands and known keyboard buttons
+    if message.text.startswith("/") or message.text in [
+        BTN_CANCEL, BTN_APPLY, BTN_ABOUT, BTN_OPEN_CANDIDACY,
+        BTN_ADMIN_STATS, BTN_ADMIN_EXPORT, BTN_ADMIN_BROADCAST,
+        BTN_ADMIN_ADD_VACANCY, BTN_ADMIN_DEL_VACANCY, BTN_ADMIN_VIEW_APPS
+    ]:
+        return
+
     # If state is active, it means admin is doing something else (like adding a vacancy).
     # We only search if state is clear.
     current_state = await state.get_state()
