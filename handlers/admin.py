@@ -296,15 +296,20 @@ async def admin_del_vacancy_confirm(callback: CallbackQuery) -> None:
 
 
 # --- Search Handling ---
-@router.message(F.text)
-async def admin_text_search(message: Message, state: FSMContext) -> None:
-    # Ignore commands and known keyboard buttons
-    if message.text.startswith("/") or message.text in [
+def is_search_query(msg: Message):
+    if not msg.text:
+        return False
+    if msg.text.startswith("/"):
+        return False
+    known_buttons = {
         BTN_CANCEL, BTN_APPLY, BTN_ABOUT, BTN_OPEN_CANDIDACY,
         BTN_ADMIN_STATS, BTN_ADMIN_EXPORT, BTN_ADMIN_BROADCAST,
         BTN_ADMIN_ADD_VACANCY, BTN_ADMIN_DEL_VACANCY, BTN_ADMIN_VIEW_APPS
-    ]:
-        return
+    }
+    return msg.text not in known_buttons
+
+@router.message(F.text, is_search_query)
+async def admin_text_search(message: Message, state: FSMContext) -> None:
 
     # If state is active, it means admin is doing something else (like adding a vacancy).
     # We only search if state is clear.
