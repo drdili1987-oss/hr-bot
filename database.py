@@ -1,9 +1,15 @@
 import os
+import ssl
 import asyncpg
 
 from config import DATABASE_URL
 
 pool = None
+
+# SSL context for Supabase
+ssl_ctx = ssl.create_default_context()
+ssl_ctx.check_hostname = False
+ssl_ctx.verify_mode = ssl.CERT_NONE
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS vacancies (
@@ -32,10 +38,16 @@ CREATE INDEX IF NOT EXISTS idx_candidates_telegram_id ON candidates(telegram_id)
 
 async def init_db() -> None:
     global pool
-    # connect to the database
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL is not set.")
-    pool = await asyncpg.create_pool(DATABASE_URL)
+    pool = await asyncpg.create_pool(
+        DATABASE_URL,
+        ssl=ssl_ctx,
+        statement_cache_size=0,
+        min_size=1,
+        max_size=5,
+        command_timeout=30,
+    )
     async with pool.acquire() as conn:
         await conn.execute(_SCHEMA)
 
